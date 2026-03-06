@@ -35,7 +35,7 @@ class Solution
             numberSeq += numLine;
         }
 
-        int number1 = MayaToArabic(mayanNumbers, numberSeq, S1, L, H);
+        double number1 = MayaToArabic(mayanNumbers, numberSeq, S1, L, H);
         
         //2nd number
         numberSeq = "";
@@ -46,13 +46,12 @@ class Solution
             numberSeq += numLine;
         }
 
-        int number2 = MayaToArabic(mayanNumbers, numberSeq, S2, L, H);
+        double number2 = MayaToArabic(mayanNumbers, numberSeq, S2, L, H);
 
         //Solve operation
         string operation = Console.ReadLine();
 
         double result = PerformOperataton(operation, (double)number1, (double)number2);
-        Console.Error.WriteLine("Result is " + result);
 
         int maxPower = GetMaxPower(result);
         List<int> mayanResult = SplitNumberIntoPower20(result, maxPower);
@@ -69,6 +68,7 @@ class Solution
         }
     }
 
+    //Test function only
     static void PrintNumbers(string[] number, int length, int height)
     {
         foreach (string digit in number)
@@ -80,7 +80,7 @@ class Solution
         }
     }
 
-    static int MayaToArabic(string[] numberList, string numSeq, int totalH, int numL, int numH)
+    static double MayaToArabic(string[] numberList, string numSeq, int totalH, int numL, int numH)
     {
         int maxPower = totalH / numH;
         Stack<int> powerSeq = new Stack<int>();
@@ -99,18 +99,17 @@ class Solution
         }
 
         int power = 0;
-        int total = 0;
+        double total = 0;
         while (powerSeq.Count > 0)
         {
             total += powerSeq.Pop() * PowerOf20(power);
             power++;
         }
-        Console.Error.WriteLine("Number is " + total);
 
         return total;
     }
 
-    static int PowerOf20(int power)
+    static double PowerOf20(int power)
     {
         if (power == 0) return 1;
         
@@ -140,7 +139,7 @@ class Solution
 
     static int GetMaxPower(double num)
     {
-        int threshold = 0;
+        double threshold = 0;
         int power = 0;
         while (num >= threshold)
         {
@@ -155,16 +154,15 @@ class Solution
     {
         List<int> numList = new List<int>();
 
+        double remainder = num;
+
         for (int p = maxPower; p >= 0; p--)
         {
-            int count = 0;
-            while (num >= PowerOf20(p))
-            {
-                num -= PowerOf20(p);
-                count++;
-            }
+            double divisor = PowerOf20(p);
+            int quotient = (int)(remainder / divisor);
+            remainder = remainder % PowerOf20(p);
 
-            numList.Add(count);
+            numList.Add(quotient);
         }
 
         return numList;
