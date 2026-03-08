@@ -55,6 +55,7 @@ class Solution
                     break;
                 }
 
+                //Get new categories and filter out known ones
                 List<string> newCategories = GetAssociatedCategories(currentCategory, movies);
                 foreach (string category in newCategories)
                 {
@@ -67,6 +68,7 @@ class Solution
                 
             }
             
+            //Add new categories to Stack
             foreach(string category in categoriesToAddToStack)
             {
                 categoryStack.Push(category);
