@@ -4,80 +4,118 @@ using System.IO;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 
 class Solution
 {
+    const string targetName = "Kevin Bacon";
+
     static void Main(string[] args)
     {
         int degreeCount = 0;
-        string targetName = "Kevin Bacon";
+
         string actorName = Console.ReadLine();
+
+        //Check if Kevin
         if (actorName == targetName)
         {
             Console.WriteLine(degreeCount);
             return;    
         }
 
-        int n = int.Parse(Console.ReadLine());
-
-        Dictionary<string, List<string>> movies = new Dictionary<string, List<string>>();
-
-        for (int i = 0; i < n; i++)
-        {
-            string movieCast = Console.ReadLine();
-            string[] category = movieCast.Split(':');
-            string[] actorList = category[1].Split(',');
-            movies[category[0]] = new List<string>();
-            foreach (string actor in actorList)
-            {
-                movies[category[0]].Add(actor.Trim());
-            }
-
-            
-        }
-
-        DebugDictionary(ref movies);
+        //Setup dictionary
+        Dictionary<string, List<string>> movies = BuildActorDictionary();
+        List<string> addedCategories = new List<string>();
+        Stack<string> categoryStack = new Stack<string>();
 
         //Create Head Node
-        List<string> addedActors = new List<string>();
-        ActorNode head = new ActorNode(actorName);
-        addedActors.Add(actorName);
-        
-        //Create head children - find in dictionary
-        ActorNode currentNode = head;
-        degreeCount++;
-
         foreach (string key in movies.Keys)
         {
             if (movies[key].Contains(actorName))
             {
-                foreach (string actor in movies[key])
+                categoryStack.Push(key);
+                addedCategories.Add(key);
+            }
+        }
+
+        //Start Traversal
+        bool targetFound = false;
+        while ((categoryStack.Count > 0) && !targetFound)
+        {
+            degreeCount++;
+            List<string> categoriesToAddToStack = new List<string>();
+
+            while (categoryStack.Count > 0)
+            {
+                string currentCategory = categoryStack.Pop();
+                if (movies[currentCategory].Contains(targetName))
                 {
-                    Console.Error.WriteLine(actor);
-                    //if (actor == targetName) break;
-                    if (addedActors.Contains(actor) == false)
+                    Console.WriteLine(degreeCount);
+                    targetFound = true;
+                    break;
+                }
+
+                List<string> newCategories = GetAssociatedCategories(currentCategory, movies);
+                foreach (string category in newCategories)
+                {
+                    if (!addedCategories.Contains(category))
                     {
-                        //Create new node
-                        ActorNode temp = new ActorNode(actor);
-                        currentNode.Children.Add(temp);
-                        addedActors.Add(actor);
-                        
+                        categoriesToAddToStack.Add(category);
+                        addedCategories.Add(category);
                     }
+                }        
+                
+            }
+            
+            foreach(string category in categoriesToAddToStack)
+            {
+                categoryStack.Push(category);
+            }
+        }
+    }
+
+    static List<string> GetAssociatedCategories(string category, Dictionary<string, List<string>> movieDict)
+    {
+        List<string> listToReturn = new List<string>();
+
+        foreach (string actor in movieDict[category])
+        {
+            foreach (string key in movieDict.Keys)
+            {
+                if ((movieDict[key].Contains(actor)) && (!listToReturn.Contains(key)))
+                {
+                    listToReturn.Add(key);
                 }
             }
         }
 
-        //addedActors.ForEach(p=> Console.Error.WriteLine(p));
-
-        //
-
-        // Write an answer using Console.WriteLine()
-        // To debug: Console.Error.WriteLine("Debug messages...");
-
-        Console.WriteLine("N degrees to Kevin Bacon");
+        return listToReturn;
     }
 
-    static public void DebugDictionary(ref Dictionary<string, List<string>> dict)
+
+    static Dictionary<string, List<string>> BuildActorDictionary()
+    {
+        Dictionary<string, List<string>> movies = new Dictionary<string, List<string>>();
+
+        int categoriesCount = int.Parse(Console.ReadLine());
+
+        for (int i = 0; i < categoriesCount; i++)
+        {
+            string[] movieCast = Console.ReadLine().Split(':');
+            string category = movieCast[0];
+            string[] actorList = movieCast[1].Split(',');
+            movies[category] = new List<string>();
+            foreach (string actor in actorList)
+            {
+                movies[category].Add(actor.Trim());
+            }
+        }
+
+        return movies;
+    }
+
+    //Debug methods
+    static void DebugDictionary(ref Dictionary<string, List<string>> dict)
     {
         foreach (string key in dict.Keys)
         {
@@ -87,17 +125,5 @@ class Solution
                 Console.Error.WriteLine(actor);
             }
         }
-    }
-}
-
-public struct ActorNode
-{
-    public string Name;
-    public List<ActorNode> Children;
-
-    public ActorNode(string name)
-    {
-        Name = name;
-        Children = new List<ActorNode>();
     }
 }
