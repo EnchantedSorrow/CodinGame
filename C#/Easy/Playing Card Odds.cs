@@ -1,16 +1,9 @@
 using System;
 using System.Linq;
-using System.IO;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Authentication.ExtendedProtection;
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+
 class Solution
 {
     static void Main(string[] args)
@@ -21,122 +14,19 @@ class Solution
         string[] inputs = Console.ReadLine().Split(' ');
         int R = int.Parse(inputs[0]);
         int S = int.Parse(inputs[1]);
-        for (int i = 0; i < R; i++)
-        {
-            ProcessCardRemoval(deck, Console.ReadLine());
-        }
+        deck.RemoveCard(Enumerable.Range(0, R).Select(_ => Console.ReadLine()));
 
-        int chanceOfDraw = 0;
-        for (int i = 0; i < S; i++)
-        {
-            chanceOfDraw += ProcessSoughtCards(deck, Console.ReadLine());
-        }
+        CardDeck soughtCards = new CardDeck(Enumerable.Range(0, S).Select(_ => Console.ReadLine()));
 
-        Console.WriteLine("{0}%", GetPercentageChange(chanceOfDraw, deck.DeckSize));
+
+        Console.WriteLine("{0}%", GetPercentageChance(deck.CompareDecks(soughtCards), deck.DeckSize));
     }
 
-    static int GetPercentageChange(int possibleCards, int deckSize)
+    static int GetPercentageChance(int possibleCards, int deckSize)
     {
         double chance = (double)possibleCards / (double)deckSize;
 
         return (int)(chance * 100.0);
-    }
-
-    static void ProcessCardRemoval(CardDeck cardDeck, string cardCode)
-    {
-        List<string>  suitsDeck = new List<string>();   //Hold suits to remove
-        List<string> numbersDeck = new List<string>();  //Hold number value to remove
-
-        //Split cards by suit and numbers
-        SortCards(ref suitsDeck, ref numbersDeck, cardCode.ToCharArray());
-
-        //Merge into individual cards and remove cards from cardDeck
-        foreach (string numberCard in numbersDeck)
-        {
-            foreach (string suit in suitsDeck)
-            {
-                cardDeck.RemoveCard(numberCard + suit);
-            }
-        }
-    }
-
-    static int ProcessSoughtCards(CardDeck cardDeck, string cardCode)
-    {
-        List<string>  suitsDeck = new List<string>();   //Hold suits to remove
-        List<string> numbersDeck = new List<string>();  //Hold number value to remove
-
-        //Split cards by suit and numbers
-        SortCards(ref suitsDeck, ref numbersDeck, cardCode.ToCharArray());
-
-        int cardChances = 0;
-        //Get chance of draw for this card code
-        foreach (string numberCard in numbersDeck)
-        {
-            foreach (string suit in suitsDeck)
-            {
-                if (cardDeck.CheckForCard(numberCard + suit))
-                {
-                    cardChances++;
-                }
-            }
-        }
-
-        return cardChances;
-    }
-
-    static void SortCards(ref List<string> suitsDeck, ref List<string> numbersDeck, char[] charCodes)
-    {
-        //Split cards by suit and numbers
-        foreach (char code in charCodes)
-        {
-            if (CheckForSuit(code))
-            {
-                suitsDeck.Add(code.ToString());
-            }
-            else
-            { 
-                numbersDeck.Add(code.ToString());
-            }
-        }
-
-        if (suitsDeck.Count == 0)
-        {
-            suitsDeck.Add("H");
-            suitsDeck.Add("D");
-            suitsDeck.Add("C");
-            suitsDeck.Add("S");
-        }
-
-        if (numbersDeck.Count == 0)
-        {
-            for (int i = 2; i < 10; i++)
-            {
-                numbersDeck.Add(i.ToString());
-            }
-
-            numbersDeck.Add("T");
-            numbersDeck.Add("J");
-            numbersDeck.Add("Q");
-            numbersDeck.Add("K");
-            numbersDeck.Add("A");
-        }
-    }
-
-    static bool CheckForSuit(char suitCode)
-    {
-        switch (suitCode)
-        {
-            case 'H':
-                return true;
-            case 'D':
-                return true;
-            case 'C':
-                return true;
-            case 'S':
-                return true;
-            default:
-                return false;
-        }
     }
 }
 
@@ -159,36 +49,50 @@ class CardDeck
     
     HashSet<(char, char)> _deck;
     
+    public HashSet<(char, char)> Deck { get { return _deck;} }
     public int DeckSize { get { return _deck.Count; }}
 
-    public CardDeck()
+    public CardDeck(string cards = "")
     {
         _deck = new HashSet<(char, char)>();
-        BuildDeck();
+        BuildDeck(cards);
     }
 
-    void BuildDeck()
+    public CardDeck(IEnumerable<string> cardValues)
     {
-        foreach (char rank in _ranks)
+        _deck = new HashSet<(char, char)>();
+        foreach(string card in cardValues)
         {
-            foreach (char suit in _suits)
+            BuildDeck(card);
+        }
+    }
+
+    void BuildDeck(string cards = "")
+    {
+        foreach(char rank in cards.Any(c => _ranks.Contains(c)) ? cards.Intersect(_ranks) : _ranks)
+        {
+            foreach (char suit in cards.Any(c => _suits.Contains(c)) ? cards.Intersect(_suits) : _suits)
             {
                 _deck.Add((rank, suit));
             }
         }
     }
 
-    public bool CheckForCard(string cardValue)
+
+    public int CompareDecks(CardDeck compareDeck)
     {
-        foreach(char rank in cardValue.Any(c => _ranks.Contains(c)) ? cardValue.Intersect(_ranks) : _ranks)
+        int matchedCards = 0;
+        foreach ((char, char) card in compareDeck.Deck)
         {
-            foreach (char suit in cardValue.Any(c => _suits.Contains(c)) ? cardValue.Intersect(_suits) : _suits)
-            {
-                return _deck.Contains((rank, suit));
-            }
+            if (CheckCardMatches(card)) matchedCards++;
         }
 
-        return false;
+        return matchedCards;
+    }
+
+    public bool CheckCardMatches((char, char) cardValue)
+    {
+        return _deck.Contains(cardValue);
     }
 
     public void RemoveCard(string cardValue)
@@ -199,6 +103,14 @@ class CardDeck
             {
                 _deck.Remove((rank, suit));
             }
+        }
+    }
+
+    public void RemoveCard(IEnumerable<string> cardValues)
+    {
+        foreach (string card in cardValues)
+        {
+            RemoveCard(card);
         }
     }
 
