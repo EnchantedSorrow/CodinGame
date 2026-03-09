@@ -154,77 +154,37 @@ struct Card
 
 class CardDeck
 {
-    List<Card>[] _deck;
-    public int DeckSize { get { return GetDeckSize(); }}
+    string _ranks = "23456789TJQKA";
+    string _suits = "HDCS";
+    
+    HashSet<(char, char)> _deck;
+    
+    public int DeckSize { get { return _deck.Count; }}
 
     public CardDeck()
     {
-        _deck = new List<Card>[4];
+        _deck = new HashSet<(char, char)>();
+        BuildDeck();
+    }
 
-        for (int i = 0; i < _deck.Length; i++)
+    void BuildDeck()
+    {
+        foreach (char rank in _ranks)
         {
-            string suit = GetSuitType(i);
-            _deck[i] = new List<Card>();
-
-            for (int num = 2; num <= 9; num++)
+            foreach (char suit in _suits)
             {
-                _deck[i].Add(new Card(num.ToString() + suit));
+                _deck.Add((rank, suit));
             }
-
-            _deck[i].Add(new Card("T" + suit));
-            _deck[i].Add(new Card("J" + suit));
-            _deck[i].Add(new Card("Q" + suit));
-            _deck[i].Add(new Card("K" + suit));
-            _deck[i].Add(new Card("A" + suit));
         }
-    }
-
-    string GetSuitType(int index)
-    {
-        switch (index)
-        {
-            case 0:
-                return "D";
-
-            case 1:
-                return "H";
-
-            case 2:
-                return "C";
-
-            case 3:
-                return "S";
-
-            default:
-                return "";
-        }
-    }
-
-    int GetDeckSize()
-    {
-        int total = 0;
-
-        foreach(List<Card> suit in _deck)
-        {
-            total += suit.Count;
-        }
-
-        return total;
     }
 
     public bool CheckForCard(string cardValue)
     {
-        for (int suitI = 0; suitI < _deck.Length; suitI++)
+        foreach(char rank in cardValue.Any(c => _ranks.Contains(c)) ? cardValue.Intersect(_ranks) : _ranks)
         {
-            for (int cardI = 0; cardI < _deck[suitI].Count; cardI++)
+            foreach (char suit in cardValue.Any(c => _suits.Contains(c)) ? cardValue.Intersect(_suits) : _suits)
             {
-                Card card = _deck[suitI][cardI];
-                if ((card.Value == cardValue) && (card.Counted == false))
-                {
-                    card.Counted = true;
-                    _deck[suitI][cardI] = card;
-                    return true;
-                }             
+                return _deck.Contains((rank, suit));
             }
         }
 
@@ -233,15 +193,11 @@ class CardDeck
 
     public void RemoveCard(string cardValue)
     {
-        for (int suitI = 0; suitI < _deck.Length; suitI++)
+        foreach(char rank in cardValue.Any(c => _ranks.Contains(c)) ? cardValue.Intersect(_ranks) : _ranks)
         {
-            for (int cardI = 0; cardI < _deck[suitI].Count; cardI++)
+            foreach (char suit in cardValue.Any(c => _suits.Contains(c)) ? cardValue.Intersect(_suits) : _suits)
             {
-                Card card = _deck[suitI][cardI];
-                if (card.Value == cardValue)
-                {
-                    _deck[suitI].Remove(card);
-                }
+                _deck.Remove((rank, suit));
             }
         }
     }
@@ -249,9 +205,9 @@ class CardDeck
     //Debug method
     public void PrintCurrentDeck()
     {
-        foreach (List<Card> suit in _deck)
+        foreach ((char, char) card in _deck)
         {
-            suit.ForEach(card=> Console.Error.WriteLine(card.Value));
+            Console.Error.WriteLine("{0}{1}", card.Item1, card.Item2);
         }
     }
 }
