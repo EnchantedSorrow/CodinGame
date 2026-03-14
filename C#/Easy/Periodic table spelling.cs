@@ -11,23 +11,35 @@ using System.Collections.Generic;
  **/
 class Solution
 {
-    //static PeriodicTable _refTable;
+    static List<string> _prunedElements;
+    static List<string> _wordOutputs;
 
     static void Main(string[] args)
     {
-        PeriodicTable _refTable;
-        _refTable = new PeriodicTable();
+        PeriodicTable refTable;
+        refTable = new PeriodicTable();
+        _prunedElements = new List<string>();
+        _wordOutputs = new List<string>();
 
         string word = Console.ReadLine();
-        Console.Error.WriteLine(word);  
+        //Console.Error.WriteLine(word);  
 
         //Remove unneeded elements
-        List<string> editedList = RemoveUnneededListItems(_refTable.ElementList, word);
+        _prunedElements = RemoveUnneededListItems(refTable.ElementList, word);
 
-        /*Console.Error.WriteLine("List count: {0}", editedList.Count);
-        editedList.ForEach(i => Console.Error.WriteLine(i));*/
+        //Console.Error.WriteLine("List count: {0}", editedList.Count);
+        //_prunedElements.ForEach(i => Console.Error.WriteLine(i));
 
-        BuildWord(editedList, word);
+        BuildWord("", word);
+
+        if (_wordOutputs.Count == 0)
+        {
+            Console.WriteLine("none");
+        }
+        else
+        {
+            _wordOutputs.ForEach(word => Console.WriteLine(word));
+        }
     }
 
     static List<string> RemoveUnneededListItems(List<string> list, string word)
@@ -42,50 +54,26 @@ class Solution
         return editedList;
     }
 
-    static public void BuildWord(List<string> list, string word)
+    static public void BuildWord(string word, string remainingLetters)
     {
-        Stack<LetterNode> nodeStack = new Stack<LetterNode>();
-        LetterNode head = new LetterNode("", -1);
-        nodeStack.Push(head);
-
-        while (nodeStack.Count > 0)
+        if (remainingLetters.Length == 0) _wordOutputs.Add(word);
+        else
         {
-            LetterNode currentNode = nodeStack.Pop();
-
-            int currentIndex = (currentNode.Index >= 0) ? (currentNode.Index + currentNode.Value.Length) : 0;
-
-            foreach (string letter in list)
+            string substring = remainingLetters.Substring(0, 1).ToUpper(); //1st letter of element
+            if (_prunedElements.Contains(substring))
             {
-                if (currentIndex + letter.Length < word.Length)
+                BuildWord(word + substring, remainingLetters.Substring(1));
+            }
+            //Check for 2 letter elements
+            if (remainingLetters.Length >= 2)
+            {
+                substring += remainingLetters[1];
+                if (_prunedElements.Contains(substring))
                 {
-                    if (letter.ToLower() == word.Substring(currentIndex, letter.Length).ToLower())
-                    {
-                        LetterNode newNode = new LetterNode(letter, currentIndex);
-                        currentNode.Children.Add(newNode);
-                    }
+                    BuildWord(word + substring, remainingLetters.Substring(2));
                 }
             }
-            
-            foreach (LetterNode node in currentNode.Children)
-            {
-                Console.Error.WriteLine("{0} {1}", node.Value, node.Index);
-                nodeStack.Push(node);
-            }
         }
-    }
-}
-
-public struct LetterNode
-{
-    public string Value;
-    public int Index;
-    public List<LetterNode> Children;
-
-    public LetterNode(string value, int index)
-    {
-        Value = value;
-        Index = index;
-        Children = new List<LetterNode>();
     }
 }
 
