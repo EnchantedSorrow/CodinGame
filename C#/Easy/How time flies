@@ -1,0 +1,121 @@
+using System;
+
+class Solution
+{
+    static void Main(string[] args)
+    {
+        Date begin = GetDate(Console.ReadLine(), '.');
+        Date end = GetDate(Console.ReadLine(), '.');
+
+        DateDifference dateDiff = new DateDifference(begin, end);
+
+        Console.WriteLine("{0}{1}{2}", dateDiff.PrintYears(), dateDiff.PrintMonths(), dateDiff.PrintDays());
+    }
+
+    public static Date GetDate(string input, char seperator)
+    {
+        string[] split = input.Split(seperator);
+
+        if (split.Length == 3)
+        {
+            return new Date(Int32.Parse(split[0]), Int32.Parse(split[1]), Int32.Parse(split[2]));
+        }
+        else
+        {
+            return new Date(0, 0, 0);
+        }
+    }
+
+    //Debug
+    public static string FormatDate(Date date)
+    {
+        return (date.Day + "." + date.Month + "." + date.Year);
+    }
+}
+
+public struct Date
+{
+    public int Day;
+    public int Month;
+    public int Year;
+
+    public Date(int day, int month, int year)
+    {
+        Day = day;
+        Month = month;
+        Year = year;
+    }
+}
+
+public class DateDifference
+{
+    int _years;
+    int _months;
+    int _days;
+
+    public DateDifference(Date begin, Date end)
+    {
+        int currY = begin.Year;
+        int currM = begin.Month;
+        int endM = end.Month;
+        int endY = end.Year;
+
+        _days = 0;
+        _months = 0;
+        _years = 0;
+
+        while (!((currM == endM) && (currY == end.Year)))
+        {
+            _days += GetNumOfDaysInMonth(currM, currY);
+            currM++;
+            _months++;
+            if (currM > 12)
+            {
+                currY++;
+                currM = 1;
+            }
+        }
+        
+        _days -= begin.Day;
+        _days += end.Day;
+
+        if (end.Day < begin.Day)
+        {
+            _months--;
+        }
+
+        _years = _months / 12;
+        _months = (_months % 12);
+    }
+
+    int GetNumOfDaysInMonth(int month, int year)
+    {
+        if (month >= 8) return (month % 2 == 0) ? 31 : 30;
+
+        if (month != 2)
+        {
+            return (month % 2 == 1) ? 31 : 30;
+        }
+
+        return (year % 4 == 0) ? 29 : 28;
+    }
+
+    public string PrintYears()
+    {
+        if (_years > 1) return (_years + " years, ");
+        if (_years == 1) return (_years + " year, ");
+        return "";
+    }
+
+    public string PrintMonths()
+    {
+        if (_months > 1) return (_months + " months, ");
+        if (_months == 1) return (_months + " month, ");
+        return "";
+    }
+
+    public string PrintDays()
+    {
+        return ("total " + _days + " days");
+    }
+}
